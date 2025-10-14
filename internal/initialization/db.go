@@ -12,7 +12,7 @@ var Db *gorm.DB
 func InitDatabaseConnection() error {
 	// 检查数据库配置是否为空
 	if AppConfig.DbHost == "" || AppConfig.DbDatabase == "" {
-		fmt.Println("数据库配置为空，跳过数据库初始化")
+		fmt.Println("⏭️  数据库配置为空，跳过初始化")
 		return nil
 	}
 
@@ -27,13 +27,12 @@ func InitDatabaseConnection() error {
 		AppConfig.DbPort,
 		AppConfig.DbDatabase,
 	)
-	fmt.Println("数据库连接地址是：", dsn)
 
 	Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return fmt.Errorf("数据库连接失败: %v", err)
 	}
 
-	fmt.Println("数据库连接成功")
+	fmt.Println("✅ 数据库连接成功")
 	return nil
 }

@@ -16,7 +16,7 @@ var RabbitmqChannel *amqp.Channel
 func NewRabbitmq(host string, port int) error {
 	// 检查 MQ 配置是否为空
 	if host == "" {
-		fmt.Println("RabbitMQ 配置为空，跳过 MQ 初始化")
+		fmt.Println("⏭️  RabbitMQ 配置为空，跳过初始化")
 		return nil
 	}
 
@@ -34,7 +34,7 @@ func NewRabbitmq(host string, port int) error {
 	}
 	RabbitmqChannel = ch
 
-	fmt.Println("RabbitMQ 连接成功")
+	fmt.Println("✅ RabbitMQ 连接成功")
 	return nil
 }
 
@@ -132,7 +132,6 @@ func StartQueue(queueName string, handler func([]byte) error) {
 func ListenQueue() {
 	// 检查 RabbitMQ 是否已初始化
 	if RabbitmqChannel == nil {
-		fmt.Println("RabbitMQ 未初始化，跳过队列监听")
 		return
 	}
 
@@ -140,7 +139,7 @@ func ListenQueue() {
 	// 使用示例: StartQueue("your_queue_name", YourHandler)
 	// StartQueue("demo_queue", DemoHandler)
 
-	fmt.Println("队列监听已启动")
+	fmt.Println("✅ 队列监听已启动")
 }
 
 // DemoHandler 示例消息处理函数

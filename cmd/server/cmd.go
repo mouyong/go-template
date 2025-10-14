@@ -24,20 +24,20 @@ var cmd = &cobra.Command{
 
 		config := initialization.LoadConfig(cfg)
 
-		fmt.Println("\n正在初始化")
+		fmt.Println("\n正在初始化...")
 
 		// 可选初始化数据库
 		if err := initialization.InitDatabaseConnection(); err != nil {
-			log.Printf("数据库初始化失败: %v\n", err)
+			fmt.Printf("⚠️  数据库: %v\n", err)
 		}
 
 		// 可选初始化 RabbitMQ
 		if err := rabbitmq.NewRabbitmq(initialization.AppConfig.MqHost, initialization.AppConfig.MqPort); err != nil {
-			log.Printf("RabbitMQ 初始化失败: %v\n", err)
+			fmt.Printf("⚠️  RabbitMQ: %v\n", err)
 		}
 		rabbitmq.ListenQueue()
 
-		fmt.Println("初始化完成")
+		fmt.Println("✅ 初始化完成")
 
 		r := gin.Default()
 		// 存储应用配置
@@ -60,9 +60,15 @@ var cmd = &cobra.Command{
 }
 
 func startHTTPServer(config initialization.Config, r *gin.Engine) (err error) {
-	fmt.Println("")
-	log.Printf("http server started: http://localhost:%d/\n", config.HttpPort)
-	err = r.Run(fmt.Sprintf("%s:%d", config.HttpHost, config.HttpPort))
+	addr := fmt.Sprintf("%s:%d", config.HttpHost, config.HttpPort)
+
+	fmt.Println("\n========================================")
+	fmt.Printf("🚀 Server is running!\n\n")
+	fmt.Printf("➜ Local:   http://localhost:%d/\n", config.HttpPort)
+	fmt.Printf("➜ Network: http://127.0.0.1:%d/\n", config.HttpPort)
+	fmt.Println("========================================\n")
+
+	err = r.Run(addr)
 	if err != nil {
 		return fmt.Errorf("failed to start http server: %v", err)
 	}
