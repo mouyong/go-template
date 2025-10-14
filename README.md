@@ -1,56 +1,254 @@
-## 部署说明
+# Go API Template
+
+基于 Gin + GORM 的 Go API 项目模板，支持可选的数据库和 RabbitMQ 配置。
+
+## 快速开始
+
+### 1. 配置文件
 
 ```bash
 cp config.example.yaml config.yaml
-cp Makefile-example Makefile
 ```
 
-## 本地开发
+编辑 `config.yaml` 配置数据库和 RabbitMQ（可选）。
 
-- air 命令可以热更新。
-- 启动命令是 make，需要热更新写代码，使用 air 命令。使用 make 命令，需要改动代码后，手动停止命令并启动 http 服务。
-
-注意：<s>报错了没有提示，看不出来因为报错导致请求失败</s>已更改 .air.toml，失败时会显示报错
-
-相关命令参考 Makefile
+### 2. 安装依赖
 
 ```bash
-git clone git@codeup.aliyun.com:cblink/flow/china-life/data-distribute/data-distribute-api.git data-distribute-api
-
-make
+go mod tidy
 ```
+
+### 3. 安装数据库迁移工具
+
+```bash
+go install github.com/pressly/goose/v3/cmd/goose@latest
+```
+
+### 4. 配置数据库连接
+
+编辑 `config.yaml` 配置数据库：
+
+```yaml
+DB_HOST: "localhost"
+DB_PORT: 3306
+DB_DATABASE: "go_api_template"
+DB_USERNAME: "root"
+DB_PASSWORD: "root"
+```
+
+**注意**: Makefile 会自动从 `config.yaml` 读取数据库配置，无需单独配置。
+
+### 5. 运行数据库迁移
+
+```bash
+# 查看迁移状态
+make migrate_status
+
+# 执行迁移
+make migrate_up
+
+# 回滚上一次迁移
+make migrate_down
+
+# 重置所有迁移
+make migrate_reset
+```
+
+### 6. 启动服务
+
+```bash
+# 使用 air 热更新（推荐开发环境）
+make run_with_live_reload
+
+# 或直接运行
+make run
+```
+
+服务将在 `http://localhost:3000` 启动。
+
+## API 路由
+
+- `GET /` - 健康检查
+- `GET /api/hello?name=World` - Hello 示例
+- `POST /api/echo` - Echo 示例（JSON 回显）
+
+## 数据库迁移
+
+### 创建新迁移
+
+```bash
+make migrate_create NAME=create_products_table
+```
+
+这将在 `db/migrations` 目录创建一个新的迁移文件。
+
+### 迁移文件格式
+
+使用 Go 文件迁移（支持跨数据库）：
+
+```go
+package migrations
+
+import (
+	"context"
+	"database/sql"
+
+	"github.com/pressly/goose/v3"
+	"gorm.io/gorm"
+)
+
+func init() {
+	goose.AddMigrationContext(upCreateProductsTable, downCreateProductsTable)
+}
+
+type Product struct {
+	ID        uint   `gorm:"primaryKey"`
+	Name      string `gorm:"type:varchar(100);not null"`
+	CreatedAt int64  `gorm:"autoCreateTime"`
+}
+
+func upCreateProductsTable(ctx context.Context, tx *sql.Tx) error {
+	db, err := gorm.Open(nil, &gorm.Config{})
+	if err != nil {
+		return err
+	}
+	return db.AutoMigrate(&Product{})
+}
+
+func downCreateProductsTable(ctx context.Context, tx *sql.Tx) error {
+	db, err := gorm.Open(nil, &gorm.Config{})
+	if err != nil {
+		return err
+	}
+	return db.Migrator().DropTable(&Product{})
+}
+```
+
+**优势**: 使用 GORM 的 AutoMigrate，支持 MySQL、PostgreSQL、SQLite 等多种数据库。
 
 ## 目录结构
 
 ```
 .
-├── Dockerfile                                                              # 容器化 Dockerfile
-├── Makefile                                                                # 辅助命令，请查看有什么可以执行的命令
-├── Makefile-example                                                        # Makefile example 文件
-├── README.md                                                               # README 自叙文件
-├── cmd                                                                     # 命令行、入口目录
-│   ├── main.go                                                             # 入口文件
-│   └── server                                                              # server 命令所在目录
-│       └── cmd.go                                                          # server 命令，初始化配置、启动引导。请手动控制第三方服务的引导启动顺序，api 接口定义也在这里
-├── config.example.yaml                                                     # 配置文件参考
-├── config.yaml                                                             # 配置文件
-├── go.mod                                                                  # go module 文件
-├── go.sum                                                                  # go sum 文件
-├── internal                                                                # 内部目录
-│   ├── handlers                                                            # 类似于 MVC 的控制器
-│   │   ├── common.go                                                       # 公共结构体、函数
-│   │   ├── data.go                                                         # 控制器作用，handle 请求处理，data 数据请求相关接口
-│   │   ├── qc_task.go                                                      # 控制器作用，handle 请求处理
-│   │   └── qc_task_sample.go                                               # 控制器作用，handle 请求处理
-│   ├── initialization                                                      # 项目初始化相关文件
-│   │   ├── config.go                                                       # 初始化配置，读取 yaml 配置文件
-│   │   └── db.go                                                           # 初始化 db 连接
-│   └── models                                                              # models 模型，gorm 模型
-│       ├── qc_task.go                                                      # 模型 qc_task
-│       └── qc_task_sample.go                                               # 模型 qc_task_sample
-├── pkg                                                                     # 第三方服务扩展封装
-│   └── rabbitmq                                                            # rabbitmq 队列
-│       └── client.go                                                       # rabbitmq 队列的 client，可以发送队列、消费消息
-└── tmp                                                                     # 临时目录，通过 air 编译、热更新。
-    └── main                                                                # 实时编译的入口文件
+├── cmd/                    # 命令行、入口目录
+│   ├── main.go             # 入口文件
+│   └── server/             # server 命令
+│       └── cmd.go          # 服务启动、路由配置
+├── config.yaml             # 配置文件
+├── config.example.yaml     # 配置文件示例
+├── db/                     # 数据库相关
+│   └── migrations/         # 数据库迁移文件
+├── internal/               # 内部代码
+│   ├── handlers/           # HTTP 处理器
+│   │   ├── common.go       # 公共响应结构
+│   │   └── example.go      # 示例处理器
+│   ├── initialization/     # 初始化
+│   │   ├── config.go       # 配置加载
+│   │   └── db.go           # 数据库初始化
+│   └── models/             # 数据模型
+├── pkg/                    # 可复用的包
+│   └── rabbitmq/           # RabbitMQ 客户端
+│       └── client.go
+├── Makefile                # Make 命令
+└── README.md
 ```
+
+## 配置说明
+
+### 服务配置
+
+```yaml
+HTTP_HOST: 0.0.0.0
+HTTP_PORT: 3000
+```
+
+### 数据库配置（可选）
+
+如果不配置数据库，服务仍可正常启动。
+
+```yaml
+DB_HOST: "localhost"
+DB_PORT: 3306
+DB_DATABASE: "go_api_template"
+DB_USERNAME: "root"
+DB_PASSWORD: "root"
+```
+
+### RabbitMQ 配置（可选）
+
+如果不配置 RabbitMQ，服务仍可正常启动。
+
+```yaml
+MQ_HOST: "localhost"
+MQ_PORT: 5672
+```
+
+## 开发
+
+### 热更新开发
+
+使用 air 进行热更新开发：
+
+```bash
+air
+```
+
+配置文件: `.air.toml`
+
+### 添加新路由
+
+在 `cmd/server/cmd.go` 中添加：
+
+```go
+r.GET("/api/your-route", handlers.YourHandler)
+```
+
+### 添加新 Handler
+
+在 `internal/handlers/` 中创建新文件：
+
+```go
+func YourHandler(c *gin.Context) {
+    resp := NewResp(c)
+    resp.successWithData(gin.H{
+        "message": "success",
+    }, nil)
+}
+```
+
+### RabbitMQ 队列监听
+
+在 `pkg/rabbitmq/client.go` 的 `ListenQueue()` 函数中：
+
+```go
+func ListenQueue() {
+    if RabbitmqChannel == nil {
+        return
+    }
+
+    // 启动自定义队列监听
+    StartQueue("your_queue", YourHandler)
+}
+
+func YourHandler(body []byte) error {
+    // 处理消息
+    log.Printf("Processing: %s", string(body))
+    return nil
+}
+```
+
+## Make 命令
+
+```bash
+make run                    # 运行服务
+make run_with_live_reload   # 热更新运行
+make migrate_up             # 执行数据库迁移
+make migrate_down           # 回滚迁移
+make migrate_status         # 查看迁移状态
+make migrate_create NAME=xxx # 创建新迁移
+make migrate_reset          # 重置所有迁移
+```
+
+## License
+
+MIT

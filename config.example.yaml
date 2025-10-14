@@ -5,7 +5,7 @@ HTTP_PORT: 3000
 # 数据库配置(可选)
 DB_HOST: ""
 DB_PORT: 3306
-DB_DATABASE: ""
+DB_DATABASE: "go_api_template"
 DB_USERNAME: root
 DB_PASSWORD: root
 
