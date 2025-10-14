@@ -1,6 +1,7 @@
 package initialization
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -40,7 +41,8 @@ func LoadConfig(cfg string) Config {
 		MqHost:         viper.GetString("MQ_HOST"), // 不使用默认值，保持空字符串
 		MqPort:         getViperIntValue("MQ_PORT", 5672),
 	}
-	fmt.Println("读取到的配置信息：", AppConfig)
+	configJSON, _ := json.MarshalIndent(AppConfig, "", "  ")
+	fmt.Printf("读取到的配置信息:\n%s\n", string(configJSON))
 
 	return AppConfig
 }
