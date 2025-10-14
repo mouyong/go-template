@@ -40,6 +40,14 @@ var cmd = &cobra.Command{
 		fmt.Println("✅ 初始化完成")
 
 		r := gin.Default()
+
+		// 配置可信代理
+		if len(config.TrustedProxies) > 0 {
+			r.SetTrustedProxies(config.TrustedProxies)
+		} else {
+			r.SetTrustedProxies(nil)
+		}
+
 		// 存储应用配置
 		r.Use(func(c *gin.Context) {
 			c.Keys = make(map[string]any)
