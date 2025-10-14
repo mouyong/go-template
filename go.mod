@@ -1,4 +1,4 @@
-module aone-qc
+module go-api-template
 
 go 1.20
 

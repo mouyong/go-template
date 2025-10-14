@@ -1,10 +1,7 @@
 package rabbitmq
 
 import (
-	"aone-qc/internal/handlers"
-	"aone-qc/internal/models"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -15,34 +12,83 @@ import (
 var RabbitmqClient *amqp.Connection
 var RabbitmqChannel *amqp.Channel
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
+// NewRabbitmq 初始化 RabbitMQ 连接
+func NewRabbitmq(host string, port int) error {
+	// 检查 MQ 配置是否为空
+	if host == "" {
+		fmt.Println("RabbitMQ 配置为空，跳过 MQ 初始化")
+		return nil
 	}
-}
 
-func NewRabbitmq(host string, port int) {
+	fmt.Println("正在初始化 RabbitMQ 连接...")
 	amqpHost := fmt.Sprintf("amqp://guest:guest@%s:%d/", host, port)
 	conn, err := amqp.Dial(amqpHost)
-	failOnError(err, "Failed to connect to RabbitMQ")
+	if err != nil {
+		return fmt.Errorf("RabbitMQ 连接失败: %v", err)
+	}
 	RabbitmqClient = conn
 
 	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
+	if err != nil {
+		return fmt.Errorf("RabbitMQ Channel 创建失败: %v", err)
+	}
 	RabbitmqChannel = ch
+
+	fmt.Println("RabbitMQ 连接成功")
+	return nil
 }
 
-func StartQcQueue() {
-	start_qc_queue_name := "start_qc_queue"
+// Close 关闭 RabbitMQ 连接
+func Close() {
+	if RabbitmqChannel != nil {
+		RabbitmqChannel.Close()
+	}
+	if RabbitmqClient != nil {
+		RabbitmqClient.Close()
+	}
+}
+
+// Send 发送消息到指定队列
+func Send(queueName string, data string) {
 	ch := RabbitmqChannel
 
 	q, err := ch.QueueDeclare(
-		start_qc_queue_name, // name
-		true,                // durable
-		false,               // delete when unused
-		false,               // exclusive
-		false,               // no-wait
-		nil,                 // arguments
+		queueName, // name
+		false,     // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+	failOnError(err, "Failed to declare a queue")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = ch.PublishWithContext(ctx,
+		"",     // exchange
+		q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(data),
+		})
+	failOnError(err, "Failed to publish a message")
+	log.Printf(" [x] Sent %s\n", data)
+}
+
+// StartQueue 启动队列监听，支持自定义队列名和处理函数
+func StartQueue(queueName string, handler func([]byte) error) {
+	ch := RabbitmqChannel
+
+	q, err := ch.QueueDeclare(
+		queueName, // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 
@@ -64,101 +110,49 @@ func StartQcQueue() {
 	)
 	failOnError(err, "Failed to register a consumer")
 
-	var forever chan struct{}
-
 	go func() {
 		for d := range msgs {
-			// log.Printf("Received a message: %s", d.Body)
-			// dotCount := bytes.Count(d.Body, []byte("."))
-			t := time.Duration(1)
-			time.Sleep(t * time.Second)
-			log.Printf("Done")
+			log.Printf("Received a message from queue [%s]: %s", queueName, d.Body)
 
-			var taskDTO map[string]interface{}
-			var qcTaskDTO handlers.QcTaskDTO
-
-			json.Unmarshal(d.Body, &taskDTO)
-
-			fmt.Println(taskDTO["qc_task_samples"])
-
-			qc_tasksBytes, _ := json.Marshal(taskDTO["qc_tasks"])
-			json.Unmarshal(qc_tasksBytes, &qcTaskDTO)
-
-			qcTaskModel := models.QcTasks{
-				Environment:       qcTaskDTO.Environment,
-				TenantID:          qcTaskDTO.TenantId,
-				Slug:              qcTaskDTO.Slug,
-				ProjectName:       qcTaskDTO.ProjectName,
-				ExperimentBatchNo: qcTaskDTO.ExperimentBatchNo,
-				AnalysesBatchNo:   qcTaskDTO.AnalysesBatchNo,
+			// 调用业务处理函数
+			if err := handler(d.Body); err != nil {
+				log.Printf("Error processing message: %v", err)
+				d.Nack(false, true) // 消息处理失败，重新入队
+			} else {
+				d.Ack(false) // 消息处理成功，确认
+				log.Printf("Message processed successfully")
 			}
-
-			qcTaskId, err := qcTaskModel.Save()
-			if err != nil {
-				fmt.Println("save error: ", err)
-				return
-			}
-
-			var qc_task_samples []*models.QcTaskSample
-			for _, sample := range taskDTO["qc_task_samples"].([]interface{}) {
-				fmt.Println(sample)
-
-				sampleItem, _ := sample.(map[string]interface{})
-
-				qc_task_sample := &models.QcTaskSample{
-					BatchID:           qcTaskId,
-					ExperimentBatchNo: sampleItem["experiment_batch_number"].(string),
-					AnalysesBatchNo:   sampleItem["analysis_batch_number"].(string),
-					SampleNo:          sampleItem["test_number"].(string),
-				}
-				qc_task_sample.Save()
-
-				qc_task_samples = append(qc_task_samples, qc_task_sample)
-			}
-
-			d.Ack(false)
 		}
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
+	log.Printf(" [*] Listening on queue: %s", queueName)
 }
 
+// ListenQueue 启动队列监听
 func ListenQueue() {
-	go StartQcQueue()
+	// 检查 RabbitMQ 是否已初始化
+	if RabbitmqChannel == nil {
+		fmt.Println("RabbitMQ 未初始化，跳过队列监听")
+		return
+	}
+
+	// 启动示例队列监听
+	// 使用示例: StartQueue("your_queue_name", YourHandler)
+	// StartQueue("demo_queue", DemoHandler)
+
+	fmt.Println("队列监听已启动")
 }
 
-func Send(queue_name string, data string) {
-	ch := RabbitmqChannel
-
-	q, err := ch.QueueDeclare(
-		queue_name, // name
-		false,      // durable
-		false,      // delete when unused
-		false,      // exclusive
-		false,      // no-wait
-		nil,        // arguments
-	)
-	failOnError(err, "Failed to declare a queue")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	body := data
-	err = ch.PublishWithContext(ctx,
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
-		})
-	failOnError(err, "Failed to publish a message")
-	log.Printf(" [x] Sent %s\n", body)
+// DemoHandler 示例消息处理函数
+func DemoHandler(body []byte) error {
+	// TODO: 在这里添加你的业务逻辑
+	log.Printf("Processing message: %s", string(body))
+	return nil
 }
 
-func Close() {
-	RabbitmqChannel.Close()
-	RabbitmqClient.Close()
+// failOnError 辅助函数，记录错误日志
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Printf("%s: %s", msg, err)
+	}
 }

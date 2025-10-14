@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aone-qc/cmd/server"
+	"go-api-template/cmd/server"
 
 	"log"
 	"os"

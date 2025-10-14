@@ -2,14 +2,20 @@ package initialization
 
 import (
 	"fmt"
-	
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 var Db *gorm.DB
 
-func InitDatabaseConnection() {
+func InitDatabaseConnection() error {
+	// 检查数据库配置是否为空
+	if AppConfig.DbHost == "" || AppConfig.DbDatabase == "" {
+		fmt.Println("数据库配置为空，跳过数据库初始化")
+		return nil
+	}
+
 	fmt.Println("正在初始化数据库连接...")
 
 	var err error
@@ -25,6 +31,9 @@ func InitDatabaseConnection() {
 
 	Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("Failed to connect to the database")
+		return fmt.Errorf("数据库连接失败: %v", err)
 	}
+
+	fmt.Println("数据库连接成功")
+	return nil
 }

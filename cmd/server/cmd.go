@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 
-	"aone-qc/internal/handlers"
-	"aone-qc/internal/initialization"
-	"aone-qc/pkg/rabbitmq"
+	"go-api-template/internal/handlers"
+	"go-api-template/internal/initialization"
+	"go-api-template/pkg/rabbitmq"
 )
 
 var cmd = &cobra.Command{
 	Use:   "server",
-	Short: "run aone-qc api server",
+	Short: "run api server",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg, err := cmd.Flags().GetString("config")
 		if err != nil {
@@ -25,29 +25,32 @@ var cmd = &cobra.Command{
 		config := initialization.LoadConfig(cfg)
 
 		fmt.Println("\n正在初始化")
-		initialization.InitDatabaseConnection()
-		rabbitmq.NewRabbitmq(initialization.AppConfig.MqHost, initialization.AppConfig.MqPort)
+
+		// 可选初始化数据库
+		if err := initialization.InitDatabaseConnection(); err != nil {
+			log.Printf("数据库初始化失败: %v\n", err)
+		}
+
+		// 可选初始化 RabbitMQ
+		if err := rabbitmq.NewRabbitmq(initialization.AppConfig.MqHost, initialization.AppConfig.MqPort); err != nil {
+			log.Printf("RabbitMQ 初始化失败: %v\n", err)
+		}
 		rabbitmq.ListenQueue()
+
 		fmt.Println("初始化完成")
 
 		r := gin.Default()
 		// 存储应用配置
 		r.Use(func(c *gin.Context) {
-			c.Keys = make(map[string]interface{})
+			c.Keys = make(map[string]any)
 			c.Keys["config"] = config
 			c.Next()
 		})
 
-		// 开始/重新 批次质控
-		r.POST("/api/qc/create", handlers.CreateOrRetryQcTask)
-		r.POST("/api/qc/retry", handlers.CreateOrRetryQcTask)
-
-		// 查看批次进度与说明
-		r.GET("/api/qc/tasks/list", handlers.GetQcTaskListWithPage)
-		r.GET("/api/qc/tasks/sample/list", handlers.GetQcTaskSampleListWithPage)
-		// r.GET("/api/qc/notify/email", handlers.SendQcNotifyToEmail)
-
-		// r.POST("/api/data/list", handlers.GetDataList)
+		// 基础路由
+		r.GET("/", handlers.Health)
+		r.GET("/api/hello", handlers.Hello)
+		r.POST("/api/echo", handlers.Echo)
 
 		err = startHTTPServer(config, r)
 		if err != nil {
