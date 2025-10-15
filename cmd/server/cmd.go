@@ -8,9 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 
-	"go-api-template/internal/handlers"
-	"go-api-template/internal/initialization"
-	"go-api-template/pkg/rabbitmq"
+	"go-template/internal/handlers"
+	"go-template/internal/initialization"
+	"go-template/pkg/rabbitmq"
 )
 
 var (

@@ -3,11 +3,11 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  bin = "./tmp/main"
+  bin = "./tmp/app"
   args_bin = ["server"]
-  cmd = "go build -o ./tmp/main ./cmd/main.go"
+  cmd = "go build -o ./tmp/app ./cmd/main.go"
   delay = 0
-  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "web", "neko-api-key-tool"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false

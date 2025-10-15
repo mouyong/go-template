@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go-api-template/cmd/server"
-	"go-api-template/internal/web"
+	"go-template/cmd/server"
+	"go-template/internal/web"
 	"log"
 	"os"
 	"path"

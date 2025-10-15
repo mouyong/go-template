@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"go-api-template/internal/common"
+	"go-template/internal/common"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"

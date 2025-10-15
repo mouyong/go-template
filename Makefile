@@ -1,4 +1,4 @@
-.PHONY: run_with_live_reload run migrate_up migrate_down migrate_status migrate_create migrate_reset build build_web
+.PHONY: run_with_live_reload run migrate_up migrate_down migrate_status migrate_create migrate_reset build build_web build_linux
 
 # 从 config.yaml 读取配置的辅助函数
 # 如果 config.yaml 不存在，使用默认值
@@ -62,5 +62,12 @@ build_web:
 
 build: build_web
 	@echo "Building Go application..."
-	go build -o go-api-template cmd/main.go
-	@echo "✅ Build complete! Binary: ./go-api-template"
+	go build -o go-template cmd/main.go
+	@echo "✅ Build complete! Binary: ./go-template"
+
+build_linux: build_web
+	@echo "Building Go application for Linux..."
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o go-template cmd/main.go
+	@echo "✅ Build complete! Binary: ./go-template"
+	@echo "Setting executable permission..."
+	chmod +x go-template
