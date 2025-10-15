@@ -1,6 +1,6 @@
 # Go Template
 
-基于 Gin + GORM 的 Go API 项目模板，支持可选的数据库和 RabbitMQ 配置。
+基于 Gin + GORM 的 Go 项目模板，支持可选的数据库和 RabbitMQ 配置。
 
 ## 快速开始
 
