@@ -2,10 +2,11 @@ package main
 
 import (
 	"go-api-template/cmd/server"
-
+	"go-api-template/internal/web"
 	"log"
 	"os"
 	"path"
+
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +16,6 @@ func main() {
 	var rootCmd = &cobra.Command{Use: path.Base(os.Args[0])}
 	rootCmd.PersistentFlags().StringP("config", "c", "./config.yaml", "apiserver config file path.")
 
-	server.Register(rootCmd)
+	server.Register(rootCmd, web.BuildFS, web.IndexPage)
 	rootCmd.Execute()
 }

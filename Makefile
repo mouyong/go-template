@@ -1,4 +1,4 @@
-.PHONY: run_with_live_reload run migrate_up migrate_down migrate_status migrate_create migrate_reset
+.PHONY: run_with_live_reload run migrate_up migrate_down migrate_status migrate_create migrate_reset build build_web
 
 # 从 config.yaml 读取配置的辅助函数
 # 如果 config.yaml 不存在，使用默认值
@@ -46,3 +46,21 @@ migrate_create:
 migrate_reset:
 	@echo "Resetting all migrations with DSN: $(DB_DSN)"
 	goose -dir db/migrations mysql $(DB_DSN) reset
+
+# 构建命令
+build_web:
+	@echo "Building web frontend..."
+	@if [ -d "web" ]; then \
+		cd web && npm run build && \
+		echo "Copying build to internal/web..." && \
+		rm -rf ../internal/web/build && \
+		cp -r build ../internal/web/; \
+	else \
+		echo "⚠️  web 目录不存在,跳过前端构建"; \
+		echo "如需嵌入前端,请创建 web 目录并放置前端项目"; \
+	fi
+
+build: build_web
+	@echo "Building Go application..."
+	go build -o go-api-template cmd/main.go
+	@echo "✅ Build complete! Binary: ./go-api-template"

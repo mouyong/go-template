@@ -1,6 +1,7 @@
 package server
 
 import (
+	"embed"
 	"fmt"
 	"log"
 
@@ -10,6 +11,11 @@ import (
 	"go-api-template/internal/handlers"
 	"go-api-template/internal/initialization"
 	"go-api-template/pkg/rabbitmq"
+)
+
+var (
+	buildFS   embed.FS
+	indexPage []byte
 )
 
 var cmd = &cobra.Command{
@@ -56,9 +62,12 @@ var cmd = &cobra.Command{
 		})
 
 		// 基础路由
-		r.GET("/", handlers.Health)
+		r.GET("/api/health", handlers.Health)
 		r.GET("/api/hello", handlers.Hello)
 		r.POST("/api/echo", handlers.Echo)
+
+		// 配置前端静态文件服务
+		SetWebRouter(r, buildFS, indexPage)
 
 		err = startHTTPServer(config, r)
 		if err != nil {
@@ -83,7 +92,9 @@ func startHTTPServer(config initialization.Config, r *gin.Engine) (err error) {
 	return nil
 }
 
-func Register(rootCmd *cobra.Command) error {
+func Register(rootCmd *cobra.Command, fs embed.FS, index []byte) error {
+	buildFS = fs
+	indexPage = index
 	rootCmd.AddCommand(cmd)
 	return nil
 }

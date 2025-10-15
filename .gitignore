@@ -1,2 +1,4 @@
 tmp/
 config.yaml
+go-template
+internal/web/build/
