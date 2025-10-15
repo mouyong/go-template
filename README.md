@@ -1,4 +1,4 @@
-# Go API Template
+# Go Template
 
 基于 Gin + GORM 的 Go API 项目模板，支持可选的数据库和 RabbitMQ 配置。
 
@@ -31,7 +31,7 @@ go install github.com/pressly/goose/v3/cmd/goose@latest
 ```yaml
 DB_HOST: "localhost"
 DB_PORT: 3306
-DB_DATABASE: "go_api_template"
+DB_DATABASE: "go_template"
 DB_USERNAME: "root"
 DB_PASSWORD: "root"
 ```
