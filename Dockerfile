@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # 构建二进制文件
-RUN go build -ldflags="-s -w" -o go-template cmd/main.go
+RUN go build -ldflags="-s -w" -o app cmd/main.go
 
 # 运行阶段
 FROM alpine:latest
@@ -30,11 +30,11 @@ RUN apk --no-cache add ca-certificates tzdata && \
     echo "Asia/Shanghai" > /etc/timezone
 
 # 从构建阶段复制二进制文件
-COPY --from=builder /app/go-template .
+COPY --from=builder /app/app .
 
 # 复制配置文件模板（可选）
 COPY config.example.yaml .
 
 EXPOSE 9000
 
-CMD ["./go-template", "server"]
+CMD ["./app", "server"]

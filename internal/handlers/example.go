@@ -7,7 +7,7 @@ func Health(c *gin.Context) {
 	resp := NewResp(c)
 	resp.successWithData(gin.H{
 		"status": "ok",
-		"service": "go-template",
+		"service": "app",
 	}, nil)
 }
 

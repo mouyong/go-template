@@ -1,4 +1,4 @@
-module go-template
+module app
 
 go 1.23.0
 

@@ -62,12 +62,12 @@ build_web:
 
 build: build_web
 	@echo "Building Go application..."
-	go build -o go-template cmd/main.go
-	@echo "✅ Build complete! Binary: ./go-template"
+	go build -o app cmd/main.go
+	@echo "✅ Build complete! Binary: ./app"
 
 build_linux: build_web
 	@echo "Building Go application for Linux..."
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o go-template cmd/main.go
-	@echo "✅ Build complete! Binary: ./go-template"
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o app cmd/main.go
+	@echo "✅ Build complete! Binary: ./app"
 	@echo "Setting executable permission..."
-	chmod +x go-template
+	chmod +x app
