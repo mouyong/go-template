@@ -1,6 +1,6 @@
 tmp/
 config.yaml
 internal/web/build/
-./app
+app
 web/node_modules/
 web/.cache/
