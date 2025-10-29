@@ -2,5 +2,7 @@ tmp/
 config.yaml
 !.gitignore
 app
-web/node_modules/
-web/.cache/
+node_modules/
+**/.cache/*
+**/build/*
+!**/build/index.html
