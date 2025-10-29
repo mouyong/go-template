@@ -1,14 +1,14 @@
-# 前端构建阶段
-FROM oven/bun:1-alpine AS frontend-builder
+# # 前端构建阶段
+# FROM oven/bun:1-alpine AS frontend-builder
 
-WORKDIR /app
+# WORKDIR /app
 
-# 复制前端代码
-COPY web/package.json web/bun.lock ./
-RUN bun install
+# # 复制前端代码
+# COPY web/package.json web/bun.lock ./
+# RUN bun install
 
-COPY web/ ./
-RUN bun run build
+# COPY web/ ./
+# RUN bun run build
 
 # Go 构建阶段
 FROM golang:1.23-alpine AS builder
@@ -28,8 +28,8 @@ RUN go mod download
 # 复制源代码
 COPY . .
 
-# 复制前端构建结果
-COPY --from=frontend-builder /app/build ./internal/web/build
+# # 复制前端构建结果
+# COPY --from=frontend-builder /app/build ./internal/web/build
 
 # 构建二进制文件
 RUN go build -ldflags="-s -w" -o app cmd/main.go
