@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/cmd/migrate"
 	"app/cmd/server"
 	"app/internal/web"
 	"log"
@@ -17,5 +18,6 @@ func main() {
 	rootCmd.PersistentFlags().StringP("config", "c", "./config.yaml", "apiserver config file path.")
 
 	server.Register(rootCmd, web.BuildFS, web.IndexPage)
+	migrate.Register(rootCmd)
 	rootCmd.Execute()
 }
