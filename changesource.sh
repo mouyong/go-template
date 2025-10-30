@@ -31,6 +31,9 @@ declare -A MIRROR_SOURCE_DEBIAN
 MIRROR_SOURCE_DEBIAN["12_xtom"]="mirrors.xtom.com"
 MIRROR_SOURCE_DEBIAN["12_tencent"]="mirrors.tencent.com"
 MIRROR_SOURCE_DEBIAN["12_tsinghua"]="mirrors.tuna.tsinghua.edu.cn"
+MIRROR_SOURCE_DEBIAN["13_xtom"]="mirrors.xtom.com"
+MIRROR_SOURCE_DEBIAN["13_tencent"]="mirrors.tencent.com"
+MIRROR_SOURCE_DEBIAN["13_tsinghua"]="mirrors.tuna.tsinghua.edu.cn"
 
 case "$DIST_ID" in
     ubuntu)

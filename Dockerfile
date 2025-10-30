@@ -42,7 +42,7 @@ FROM alpine:latest
 WORKDIR /app
 
 # 安装必要的运行时依赖
-RUN apk --no-cache add ca-certificates tzdata wget && \
+RUN apk --no-cache add ca-certificates tzdata curl && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
