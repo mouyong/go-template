@@ -28,51 +28,6 @@ func NewClient(host string, port int, username, password, from, fromName string)
 	}
 }
 
-// SendTaskCompletedEmail 发送任务完成通知邮件
-func (c *Client) SendTaskCompletedEmail(to, taskID, downloadURL string) error {
-	// 检查邮件配置是否为空
-	if c.host == "" || c.from == "" {
-		fmt.Println("邮件配置为空，跳过发送邮件")
-		return nil
-	}
-
-	m := gomail.NewMessage()
-	m.SetHeader("From", m.FormatAddress(c.from, c.fromName))
-	m.SetHeader("To", to)
-	m.SetHeader("Subject", "下载任务完成通知")
-
-	// HTML 邮件正文
-	body := fmt.Sprintf(`
-		<html>
-		<body>
-			<h2>您的下载任务已完成</h2>
-			<p>任务 ID: <strong>%s</strong></p>
-			<p>您可以通过以下方式获取文件:</p>
-			<ul>
-				<li>点击下载链接: <a href="%s/api/v1/tasks/%s/download">下载文件</a></li>
-				<li>查看任务详情: <a href="%s/api/v1/tasks/%s">任务详情</a></li>
-			</ul>
-			<p>您也可以复制任务 ID 在系统中查询下载。</p>
-			<br>
-			<p>感谢使用 Pathogen Query System!</p>
-		</body>
-		</html>
-	`, taskID, downloadURL, taskID, downloadURL, taskID)
-
-	m.SetBody("text/html", body)
-
-	// 创建 SMTP 拨号器
-	d := gomail.NewDialer(c.host, c.port, c.username, c.password)
-
-	// 发送邮件
-	if err := d.DialAndSend(m); err != nil {
-		return fmt.Errorf("发送邮件失败: %w", err)
-	}
-
-	fmt.Printf("✅ 邮件已发送至: %s\n", to)
-	return nil
-}
-
 // SendTaskCreatedEmail 发送任务创建通知邮件
 func (c *Client) SendTaskCreatedEmail(to, taskID string) error {
 	// 检查邮件配置是否为空
@@ -157,8 +112,53 @@ func (c *Client) SendTaskProcessingEmail(to, taskID string) error {
 	return nil
 }
 
+// SendTaskCompletedEmail 发送任务完成通知邮件
+func (c *Client) SendTaskCompletedEmail(to, taskID, downloadURL string) error {
+	// 检查邮件配置是否为空
+	if c.host == "" || c.from == "" {
+		fmt.Println("邮件配置为空，跳过发送邮件")
+		return nil
+	}
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", m.FormatAddress(c.from, c.fromName))
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", "下载任务完成通知")
+
+	// HTML 邮件正文
+	body := fmt.Sprintf(`
+		<html>
+		<body>
+			<h2>您的下载任务已完成</h2>
+			<p>任务 ID: <strong>%s</strong></p>
+			<p>您可以通过以下方式获取文件:</p>
+			<ul>
+				<li>复制下载链接 %s/api/v1/tasks/%s/download 以下载文件</li>
+				<li>查看任务详情: <a href="%s/tasks?query_type=task_id&task_ids=%s">任务详情</a></li>
+			</ul>
+			<p>您也可以复制任务 ID 在系统中查询下载。</p>
+			<br>
+			<p>感谢使用 Pathogen Query System!</p>
+		</body>
+		</html>
+	`, taskID, downloadURL, taskID, downloadURL, taskID)
+
+	m.SetBody("text/html", body)
+
+	// 创建 SMTP 拨号器
+	d := gomail.NewDialer(c.host, c.port, c.username, c.password)
+
+	// 发送邮件
+	if err := d.DialAndSend(m); err != nil {
+		return fmt.Errorf("发送邮件失败: %w", err)
+	}
+
+	fmt.Printf("✅ 邮件已发送至: %s\n", to)
+	return nil
+}
+
 // SendTaskFailedEmail 发送任务失败通知邮件
-func (c *Client) SendTaskFailedEmail(to, taskID, errorMsg string) error {
+func (c *Client) SendTaskFailedEmail(to, taskID, errorMsg, baseURL string) error {
 	// 检查邮件配置是否为空
 	if c.host == "" || c.from == "" {
 		fmt.Println("邮件配置为空，跳过发送邮件")
@@ -177,12 +177,12 @@ func (c *Client) SendTaskFailedEmail(to, taskID, errorMsg string) error {
 			<h2>您的下载任务执行失败</h2>
 			<p>任务 ID: <strong>%s</strong></p>
 			<p>失败原因: <span style="color: red;">%s</span></p>
-			<p>请检查您的输入参数或联系管理员。</p>
+			<p>您可以 <a href="%s/tasks?query_type=task_id&task_ids=%s">查看任务详情</a> 或尝试重新提交任务。</p>
 			<br>
 			<p>Pathogen Query System</p>
 		</body>
 		</html>
-	`, taskID, errorMsg)
+	`, taskID, errorMsg, baseURL, taskID)
 
 	m.SetBody("text/html", body)
 
