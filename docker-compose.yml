@@ -1,0 +1,79 @@
+services:
+  app-web:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: app-web
+    image: "ccr.ccs.tencentyun.com/pluginsworld/service-pluginsworld-app-web:${BUILD_NUMBER}"
+    ports:
+      - "30002:3000"
+    volumes:
+      - ./data/downloads:/app/downloads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # Worker 服务（消费 RabbitMQ 任务）
+  # app-worker:
+  #   build:
+  #     context: ./worker
+  #     dockerfile: Dockerfile
+  #   container_name: app-worker
+  #   image: "ccr.ccs.tencentyun.com/pluginsworld/service-pluginsworld-app-worker:${BUILD_NUMBER}"
+  #   volumes:
+  #     - ./data/downloads:/app/downloads
+  #     - /fa_db:/fa_db:ro  # 只读挂载 FASTA 数据库目录
+  #   environment:
+  #     - RABBITMQ_HOST=rabbitmq
+  #     - API_BASE_URL=http://web:3000/api/v1
+  #     - LOG_LEVEL=${WORKER_LOG_LEVEL:-INFO}
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     app-web:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+
+  mysql:
+    image: 'mysql/mysql-server:8.0'
+    container_name: app-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD:-mysql168}'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: '${DB_DATABASE:-pathogen_db}'
+      MYSQL_USER: '${DB_USERNAME:-pathogen_db}'
+      MYSQL_PASSWORD: '${DB_PASSWORD:-mysql168}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    ports:
+      - '${DB_PORT:-33060}:3306'
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - '-p${DB_PASSWORD}'
+      retries: 3
+      timeout: 5s
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --default-authentication-plugin=mysql_native_password
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    privileged: true
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping"]
+      timeout: 5s
+      retries: 3
+      # start_interval: 1s
