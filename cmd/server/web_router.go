@@ -18,7 +18,7 @@ func SetWebRouter(router *gin.Engine, buildFS embed.FS, indexPage []byte) {
 
 	// 处理 SPA 路由
 	router.NoRoute(func(c *gin.Context) {
-		path := c.Request.RequestURI
+		path := c.Request.URL.Path
 
 		// API 路由交给后端处理
 		if strings.HasPrefix(path, "/api") {
@@ -29,7 +29,7 @@ func SetWebRouter(router *gin.Engine, buildFS embed.FS, indexPage []byte) {
 			return
 		}
 
-		// 静态资源文件
+		// 静态资源文件 (只检查路径,不检查查询参数)
 		if strings.HasPrefix(path, "/static") ||
 			strings.HasPrefix(path, "/assets") ||
 			strings.Contains(path, ".") {
