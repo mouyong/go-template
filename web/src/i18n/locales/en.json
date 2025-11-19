@@ -1,0 +1,46 @@
+{
+  "home": {
+    "title": "Welcome",
+    "subtitle": "A modern web application template",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "users": "Users",
+    "orders": "Orders",
+    "revenue": "Revenue",
+    "growth": "Growth"
+  },
+  "login": {
+    "username": "Username",
+    "usernamePlaceholder": "Enter username",
+    "usernameRequired": "Username is required",
+    "password": "Password",
+    "passwordPlaceholder": "Enter password",
+    "passwordRequired": "Password is required",
+    "submit": "Login",
+    "success": "Login successful",
+    "failed": "Login failed"
+  },
+  "register": {
+    "username": "Username",
+    "usernamePlaceholder": "Enter username",
+    "usernameRequired": "Username is required",
+    "email": "Email",
+    "emailPlaceholder": "Enter email",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "password": "Password",
+    "passwordPlaceholder": "Enter password",
+    "passwordRequired": "Password is required",
+    "passwordMin": "Password must be at least 6 characters",
+    "submit": "Register",
+    "success": "Registration successful",
+    "failed": "Registration failed"
+  },
+  "notFound": {
+    "message": "Page not found",
+    "backHome": "Back to Home"
+  }
+}

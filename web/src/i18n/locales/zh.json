@@ -1,0 +1,46 @@
+{
+  "home": {
+    "title": "欢迎",
+    "subtitle": "现代化 Web 应用模板",
+    "getStarted": "开始使用",
+    "learnMore": "了解更多"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "users": "用户数",
+    "orders": "订单数",
+    "revenue": "收入",
+    "growth": "增长率"
+  },
+  "login": {
+    "username": "用户名",
+    "usernamePlaceholder": "请输入用户名",
+    "usernameRequired": "用户名不能为空",
+    "password": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "passwordRequired": "密码不能为空",
+    "submit": "登录",
+    "success": "登录成功",
+    "failed": "登录失败"
+  },
+  "register": {
+    "username": "用户名",
+    "usernamePlaceholder": "请输入用户名",
+    "usernameRequired": "用户名不能为空",
+    "email": "邮箱",
+    "emailPlaceholder": "请输入邮箱",
+    "emailRequired": "邮箱不能为空",
+    "emailInvalid": "邮箱格式不正确",
+    "password": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "passwordRequired": "密码不能为空",
+    "passwordMin": "密码长度不能少于6位",
+    "submit": "注册",
+    "success": "注册成功",
+    "failed": "注册失败"
+  },
+  "notFound": {
+    "message": "页面未找到",
+    "backHome": "返回首页"
+  }
+}
