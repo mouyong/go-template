@@ -7,3 +7,6 @@ node_modules/
 **/.cache/*
 **/build/*
 !**/build/index.html
+.env.*
+!.env.example
+!.env.production
