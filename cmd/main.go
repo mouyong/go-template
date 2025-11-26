@@ -14,7 +14,16 @@ import (
 func main() {
 	log.SetFlags(log.Default().Flags() | log.Llongfile)
 
-	var rootCmd = &cobra.Command{Use: path.Base(os.Args[0])}
+	var rootCmd = &cobra.Command{
+		Use: path.Base(os.Args[0]),
+		Run: func(cmd *cobra.Command, args []string) {
+			// 默认执行 server 命令
+			serverCmd, _, _ := cmd.Find([]string{"server"})
+			if serverCmd != nil {
+				serverCmd.Run(cmd, args)
+			}
+		},
+	}
 	rootCmd.PersistentFlags().StringP("config", "c", "./config.yaml", "apiserver config file path.")
 
 	server.Register(rootCmd, web.BuildFS, web.IndexPage)
