@@ -37,7 +37,7 @@ func (c *COSClient) Upload(ctx context.Context, reader io.Reader, size int64, op
 	nameWithoutExt := strings.TrimSuffix(opts.FileName, ext)
 	filename := fmt.Sprintf("%s_%s%s", uid, nameWithoutExt, ext)
 
-	cosPath := fmt.Sprintf("%s/invoices/%s/%d/%02d/%s",
+	cosPath := fmt.Sprintf("%s/%s/%d/%02d/%s",
 		c.config.CompanyName,
 		opts.AttachmentType,
 		now.Year(),
@@ -105,4 +105,62 @@ func (c *COSClient) GetPresignedURL(ctx context.Context, filePath string, expire
 		return "", fmt.Errorf("生成预签名URL失败: %w", err)
 	}
 	return presignedURL.String(), nil
+}
+
+// CopyObject 复制COS对象到新路径
+func (c *COSClient) CopyObject(ctx context.Context, sourcePath, destPath string) error {
+	// COS Copy API 的 source URL 格式: {bucket}.cos.{region}.myqcloud.com/{object-key}
+	sourceURL := fmt.Sprintf("%s.cos.%s.myqcloud.com/%s",
+		c.config.Bucket,
+		c.config.Region,
+		sourcePath,
+	)
+
+	_, _, err := c.client.Object.Copy(ctx, destPath, sourceURL, nil)
+	if err != nil {
+		return fmt.Errorf("复制文件失败: %w", err)
+	}
+	return nil
+}
+
+// ListObjects 列出指定前缀的所有对象
+func (c *COSClient) ListObjects(ctx context.Context, prefix string) ([]string, error) {
+	var allKeys []string
+	marker := ""
+
+	for {
+		opt := &cos.BucketGetOptions{
+			Prefix:  prefix,
+			Marker:  marker,
+			MaxKeys: 1000,
+		}
+
+		result, _, err := c.client.Bucket.Get(ctx, opt)
+		if err != nil {
+			return nil, fmt.Errorf("列出对象失败: %w", err)
+		}
+
+		for _, obj := range result.Contents {
+			allKeys = append(allKeys, obj.Key)
+		}
+
+		if !result.IsTruncated {
+			break
+		}
+		marker = result.NextMarker
+	}
+
+	return allKeys, nil
+}
+
+// ObjectExists 检查对象是否存在
+func (c *COSClient) ObjectExists(ctx context.Context, filePath string) (bool, error) {
+	_, err := c.client.Object.Head(ctx, filePath, nil)
+	if err != nil {
+		if cos.IsNotFoundError(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
