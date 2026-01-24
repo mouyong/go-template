@@ -1,0 +1,20 @@
+services:
+  service-pluginsworld-production-management-server:
+    platform: linux/amd64
+    build:
+      context: ./web-server
+      dockerfile: Dockerfile
+    command: sh -c "go install github.com/air-verse/air@latest && air -c .air.toml"
+    volumes:
+      - ./web-server:/app
+    ports:
+      - '${APP_PORT:-30001}:3000'
+    extra_hosts:
+        - 'host.docker.internal:host-gateway'
+
+  service-pluginsworld-production-management-mobile:
+    platform: linux/amd64
+    build: "./web-mobile"
+    image: "ccr.ccs.tencentyun.com/pluginsworld/service-pluginsworld-production-management-mobile:${BUILD_NUMBER}"
+    ports:
+      - "30002:80"
