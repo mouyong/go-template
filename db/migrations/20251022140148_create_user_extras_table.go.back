@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/pressly/goose/v3"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -23,14 +25,39 @@ type User struct {
 	UpdatedAt int64  `gorm:"autoUpdateTime"`
 }
 
-func upCreateUsersTable(ctx context.Context, tx *sql.Tx) error {
-	// 从 sql.Tx 获取底层的 *sql.DB
-	// 使用 GORM 连接到同一个数据库
-	db, err := gorm.Open(mysql.New(mysql.Config{
-		Conn: tx,
-	}), &gorm.Config{})
+// openGormDB 根据数据库类型打开 GORM 连接
+func openGormDB(tx *sql.Tx) (*gorm.DB, error) {
+	dbType := os.Getenv("DB_TYPE")
+	if dbType == "" {
+		dbType = "mysql" // 默认使用 MySQL
+	}
+
+	var dialector gorm.Dialector
+	switch dbType {
+	case "postgres", "postgresql":
+		dialector = postgres.New(postgres.Config{
+			Conn: tx,
+		})
+	case "mysql":
+		dialector = mysql.New(mysql.Config{
+			Conn: tx,
+		})
+	default:
+		return nil, fmt.Errorf("不支持的数据库类型: %s", dbType)
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
-		return fmt.Errorf("failed to create gorm instance: %w", err)
+		return nil, fmt.Errorf("failed to create gorm instance: %w", err)
+	}
+
+	return db, nil
+}
+
+func upCreateUsersTable(ctx context.Context, tx *sql.Tx) error {
+	db, err := openGormDB(tx)
+	if err != nil {
+		return err
 	}
 
 	// 使用 GORM AutoMigrate 创建表
@@ -42,11 +69,9 @@ func upCreateUsersTable(ctx context.Context, tx *sql.Tx) error {
 }
 
 func downCreateUsersTable(ctx context.Context, tx *sql.Tx) error {
-	db, err := gorm.Open(mysql.New(mysql.Config{
-		Conn: tx,
-	}), &gorm.Config{})
+	db, err := openGormDB(tx)
 	if err != nil {
-		return fmt.Errorf("failed to create gorm instance: %w", err)
+		return err
 	}
 
 	// 删除表

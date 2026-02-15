@@ -17,8 +17,10 @@ require (
 	github.com/spf13/viper v1.17.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.72
 	github.com/xuri/excelize/v2 v2.10.0
+	go.mongodb.org/mongo-driver v1.17.9
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/driver/mysql v1.5.2
+	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.25.10
 )
 
@@ -78,7 +80,6 @@ require (
 	github.com/xuri/efp v0.0.1 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	go.mongodb.org/mongo-driver v1.17.9 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.16.0 // indirect
 	golang.org/x/crypto v0.43.0 // indirect
@@ -91,5 +92,4 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/postgres v1.6.0 // indirect
 )
