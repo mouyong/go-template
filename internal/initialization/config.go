@@ -13,6 +13,7 @@ type Config struct {
 	HttpHost       string   `json:"httpHost"`
 	HttpPort       int      `json:"httpPort"`
 	TrustedProxies []string `json:"trustedProxies"`
+	DbType         string   `json:"dbType"`
 	DbHost         string   `json:"dbHost"`
 	DbPort         int      `json:"dbPort"`
 	DbDatabase     string   `json:"dbDatabase"`
@@ -33,6 +34,7 @@ func LoadConfig(cfg string) Config {
 		HttpHost:       getViperStringValue("HTTP_Host", "0.0.0.0"),
 		HttpPort:       getViperIntValue("HTTP_PORT", 3000),
 		TrustedProxies: getViperStringArray("TRUSTED_PROXIES", nil),
+		DbType:         getViperStringValue("DB_TYPE", "mysql"),
 		DbHost:         viper.GetString("DB_HOST"), // 不使用默认值，保持空字符串
 		DbPort:         getViperIntValue("DB_PORT", 3306),
 		DbDatabase:     viper.GetString("DB_DATABASE"), // 不使用默认值，保持空字符串

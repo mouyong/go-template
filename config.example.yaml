@@ -4,11 +4,29 @@ HTTP_PORT: 3000
 TRUSTED_PROXIES: "" # 可信代理IP列表,多个用逗号分隔,如: "127.0.0.1,10.0.0.1" 或留空表示不信任任何代理
 
 # 数据库配置(可选)
+# 支持的数据库类型: mysql, postgres, mongodb
+DB_TYPE: mysql
 DB_HOST: ""
 DB_PORT: 3306
 DB_DATABASE: "go_template"
 DB_USERNAME: root
 DB_PASSWORD: root
+
+# PostgreSQL 示例配置
+# DB_TYPE: postgres
+# DB_HOST: localhost
+# DB_PORT: 5432
+# DB_DATABASE: go_template
+# DB_USERNAME: postgres
+# DB_PASSWORD: postgres
+
+# MongoDB 示例配置
+# DB_TYPE: mongodb
+# DB_HOST: localhost
+# DB_PORT: 27017
+# DB_DATABASE: go_template
+# DB_USERNAME: ""  # MongoDB 可以不设置用户名密码
+# DB_PASSWORD: ""
 
 # RabbitMQ 配置(可选)
 MQ_HOST: ""
