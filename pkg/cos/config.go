@@ -19,7 +19,7 @@ type Config struct {
 	BaseURL     string // 访问域名(可选CDN域名)
 }
 
-// LoadConfigFromDB 从数据库加载COS配置
+// LoadConfigFromDB 从数据库加载COS配置（旧系统 - system_settings）
 func LoadConfigFromDB(db *gorm.DB, tenantID uint) (*Config, error) {
 	// 查询COS配置
 	var settings []models.SystemSetting
@@ -63,6 +63,31 @@ func LoadConfigFromDB(db *gorm.DB, tenantID uint) (*Config, error) {
 		if cfg.SecretID == "" || cfg.SecretKey == "" || cfg.Bucket == "" || cfg.Region == "" {
 			return nil, fmt.Errorf("COS配置不完整")
 		}
+	}
+
+	return cfg, nil
+}
+
+// LoadConfigByScene 根据场景从数据库加载COS配置（新系统 - cos_configs）
+func LoadConfigByScene(db *gorm.DB, scene string) (*Config, error) {
+	var cosConfig models.CosConfig
+	err := db.Where("scene = ?", scene).First(&cosConfig).Error
+	if err != nil {
+		return nil, fmt.Errorf("查询场景 %s 的 COS 配置失败: %w", scene, err)
+	}
+
+	cfg := &Config{
+		Enable:    true, // cos_configs 表中的配置默认启用
+		SecretID:  cosConfig.SecretID,
+		SecretKey: cosConfig.SecretKey,
+		Bucket:    cosConfig.Bucket,
+		Region:    cosConfig.Region,
+		BaseURL:   cosConfig.Domain,
+	}
+
+	// 验证必填配置
+	if cfg.SecretID == "" || cfg.SecretKey == "" || cfg.Bucket == "" || cfg.Region == "" {
+		return nil, fmt.Errorf("场景 %s 的 COS 配置不完整", scene)
 	}
 
 	return cfg, nil

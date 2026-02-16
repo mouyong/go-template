@@ -37,8 +37,7 @@ func (c *COSClient) Upload(ctx context.Context, reader io.Reader, size int64, op
 	nameWithoutExt := strings.TrimSuffix(opts.FileName, ext)
 	filename := fmt.Sprintf("%s_%s%s", uid, nameWithoutExt, ext)
 
-	cosPath := fmt.Sprintf("%s/%s/%d/%02d/%s",
-		c.config.CompanyName,
+	cosPath := fmt.Sprintf("%s/%d-%02d/%s",
 		opts.AttachmentType,
 		now.Year(),
 		now.Month(),
