@@ -54,8 +54,8 @@ func Send(queueName string, data string) {
 
 	q, err := ch.QueueDeclare(
 		queueName, // name
-		false,     // durable
-		false,     // delete when unused
+		false,     // durable - 非持久化
+		true,      // delete when unused - 自动删除
 		false,     // exclusive
 		false,     // no-wait
 		nil,       // arguments
@@ -84,8 +84,8 @@ func StartQueue(queueName string, handler func([]byte) error) {
 
 	q, err := ch.QueueDeclare(
 		queueName, // name
-		true,      // durable
-		false,     // delete when unused
+		false,     // durable - 非持久化
+		true,      // delete when unused - 自动删除
 		false,     // exclusive
 		false,     // no-wait
 		nil,       // arguments
