@@ -55,7 +55,18 @@ func (c *COSClient) Upload(ctx context.Context, reader io.Reader, size int64, op
 	}
 
 	// 生成访问URL
-	fileURL := fmt.Sprintf("%s/%s", strings.TrimRight(c.config.BaseURL, "/"), cosPath)
+	var fileURL string
+	if c.config.BaseURL != "" {
+		// 使用自定义域名（CDN）
+		fileURL = fmt.Sprintf("%s/%s", strings.TrimRight(c.config.BaseURL, "/"), cosPath)
+	} else {
+		// 使用默认的 COS 域名
+		fileURL = fmt.Sprintf("https://%s.cos.%s.myqcloud.com/%s",
+			c.config.Bucket,
+			c.config.Region,
+			cosPath,
+		)
+	}
 
 	return &UploadResult{
 		URL:      fileURL,

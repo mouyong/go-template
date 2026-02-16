@@ -2,6 +2,7 @@ package cos
 
 import (
 	"fmt"
+	"strings"
 
 	"app/internal/models"
 
@@ -91,4 +92,38 @@ func LoadConfigByScene(db *gorm.DB, scene string) (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// GetURLFromPath 根据文件路径构造完整的访问 URL
+// scene: 场景名称（如 "template", "attachment"）
+// path: 文件相对路径（如 "template/2026-02/xxx.xlsx"）
+func GetURLFromPath(db *gorm.DB, scene string, path string) (string, error) {
+	if path == "" {
+		return "", fmt.Errorf("文件路径不能为空")
+	}
+
+	// 如果已经是完整 URL，直接返回
+	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+		return path, nil
+	}
+
+	// 尝试加载场景配置
+	config, err := LoadConfigByScene(db, scene)
+	if err != nil {
+		// 如果场景配置不存在，返回相对路径
+		return path, fmt.Errorf("无法加载场景 %s 的配置: %w", scene, err)
+	}
+
+	// 构造完整 URL
+	if config.BaseURL != "" {
+		// 使用自定义域名（CDN）
+		return fmt.Sprintf("%s/%s", strings.TrimRight(config.BaseURL, "/"), path), nil
+	}
+
+	// 使用默认的 COS 域名
+	return fmt.Sprintf("https://%s.cos.%s.myqcloud.com/%s",
+		config.Bucket,
+		config.Region,
+		path,
+	), nil
 }
