@@ -47,4 +47,26 @@ export const post = (url, data) => api.post(url, data);
 export const put = (url, data) => api.put(url, data);
 export const del = (url) => api.delete(url);
 
+// 附件 API
+export const attachmentApi = {
+  // 上传附件
+  upload: async (file, entityType = 'common', attachmentType = 'file') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('entity_type', entityType);
+    formData.append('attachment_type', attachmentType);
+
+    return api.post('/api/attachments/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // 删除附件
+  delete: async (attachmentId) => {
+    return api.delete(`/api/attachments/${attachmentId}`);
+  },
+};
+
 export default api;
