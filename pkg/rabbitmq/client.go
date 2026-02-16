@@ -54,7 +54,7 @@ func Send(queueName string, data string) {
 
 	q, err := ch.QueueDeclare(
 		queueName, // name
-		false,     // durable - 非持久化
+		true,      // durable - 持久化
 		true,      // delete when unused - 自动删除
 		false,     // exclusive
 		false,     // no-wait
@@ -71,8 +71,9 @@ func Send(queueName string, data string) {
 		false,  // mandatory
 		false,  // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(data),
+			ContentType:  "text/plain",
+			Body:         []byte(data),
+			DeliveryMode: amqp.Persistent, // 消息持久化
 		})
 	failOnError(err, "Failed to publish a message")
 	log.Printf(" [x] Sent %s\n", data)
@@ -84,7 +85,7 @@ func StartQueue(queueName string, handler func([]byte) error) {
 
 	q, err := ch.QueueDeclare(
 		queueName, // name
-		false,     // durable - 非持久化
+		true,      // durable - 持久化
 		true,      // delete when unused - 自动删除
 		false,     // exclusive
 		false,     // no-wait
